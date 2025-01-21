@@ -1,0 +1,33 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/grail/siqi/fruit_packaging_project/fruit_packaging_zed/catkin_ws/devel/include/**",
+        "/home/grail/catkin_ws_ur10/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/grail/catkin_ws_ur10/src/aue8930_project/include/**",
+        "/home/grail/catkin_ws_ur10/src/beginner_tutorials/include/**",
+        "/home/grail/catkin_ws_ur10/src/door_inspection/include/**",
+        "/home/grail/siqi/fruit_packaging_project/fruit_packaging_zed/catkin_ws/src/green_onion_perception/include/**",
+        "/home/grail/siqi/fruit_packaging_project/fruit_packaging_zed/catkin_ws/src/igus_fruit_packaging/include/**",
+        "/home/grail/catkin_ws_green_onion/src/tof_detection/include/**",
+        "/home/grail/catkin_ws_ur10/src/Universal_Robots_ROS_Driver/ur_calibration/include/**",
+        "/home/grail/catkin_ws_ur10/src/universal_robot/ur_kinematics/include/**",
+        "/home/grail/catkin_ws_ur10/src/Universal_Robots_ROS_Driver/ur_robot_driver/include/**",
+        "/home/grail/siqi/fruit_packaging_project/fruit_packaging_zed/catkin_ws/src/zed_3d_detection/include/**",
+        "/home/grail/siqi/fruit_packaging_project/fruit_packaging_zed/catkin_ws/src/zed-ros-wrapper/zed-ros-interfaces/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

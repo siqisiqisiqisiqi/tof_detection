@@ -1,0 +1,12 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/grail/siqi/fruit_packaging_project/fruit_packaging_zed/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/grail/catkin_ws_ur10/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/grail/siqi/fruit_packaging_project/fruit_packaging_zed/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/grail/catkin_ws_ur10/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ]
+}
