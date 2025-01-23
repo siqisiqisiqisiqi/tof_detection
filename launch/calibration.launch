@@ -1,0 +1,8 @@
+<launch>
+
+    <include file="$(find orbbec_camera)/launch/femto_mega.launch"/>
+
+    <node name="calibration" pkg="tof_detection" type="calibration.py" output="screen">
+    </node>
+
+</launch>

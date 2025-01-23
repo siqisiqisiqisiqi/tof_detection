@@ -11,6 +11,7 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from ultralytics import YOLO
 
 
 class Camera:
@@ -25,10 +26,11 @@ class Camera:
         self.image_t = None
         self.depth_t = None
 
-        # Init subscribers
-        rospy.Subscriber("camera/color/image_raw", Image, self.get_image)
+        # YOLO init
+        self.model = YOLO(f"{PARENT_DIR}/weights/bunched_rgb_kpts.pt")
 
         # Init subscribers
+        rospy.Subscriber("camera/color/image_raw", Image, self.get_image)
         rospy.Subscriber("camera/depth/image_raw", Image, self.get_depth)
 
     def get_image(self, data):
@@ -57,11 +59,13 @@ class Camera:
 
             img = np.copy(self.cv_image)
             depth = np.array(self.cv_depth, dtype=np.float32)
-            rospy.loginfo(f"depth shape: {depth.shape}")
-            
-            cv2.imshow('rgb_image', img)
-            k = cv2.waitKey(5)
+            results = self.model(img)
 
+            # visualize the keypoint result
+            for r in results:
+                im_array = r.plot()
+                cv2.imshow("image", im_array)
+                k = cv2.waitKey(5)
             if k == ord('s'):
                 cv2.imwrite(f'{PARENT_DIR}/test/test.jpg', img)
                 np.save(f'{PARENT_DIR}/test/test.npy', depth)
