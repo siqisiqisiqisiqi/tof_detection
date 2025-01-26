@@ -13,6 +13,9 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from ultralytics import YOLO
 
+from src.point_util import yolo2point, depth_acquisit, img2world
+from src.visual import kpts_visiual
+
 
 class Camera:
     def __init__(self):
@@ -58,17 +61,29 @@ class Camera:
                 continue
 
             img = np.copy(self.cv_image)
-            depth = np.array(self.cv_depth, dtype=np.float32)
+            depth_img = np.array(self.cv_depth, dtype=np.float32)
             results = self.model(img)
 
-            # visualize the keypoint result
-            for r in results:
-                im_array = r.plot()
-                cv2.imshow("image", im_array)
-                k = cv2.waitKey(5)
-            if k == ord('s'):
-                cv2.imwrite(f'{PARENT_DIR}/test/test.jpg', img)
-                np.save(f'{PARENT_DIR}/test/test.npy', depth)
+            if results[0].keypoints is None:
+                continue
+
+            points, _ = yolo2point(results)
+            depths, _ = depth_acquisit(points, depth_img)
+            pro_points, yaws = img2world(points, depths)
+
+            # visualization
+            k = kpts_visiual(img, points, pro_points)
+            if k == ord('q'):
+                break
+
+            # # visualize the keypoint result
+            # for r in results:
+            #     im_array = r.plot()
+            #     cv2.imshow("image", im_array)
+            #     k = cv2.waitKey(5)
+            # if k == ord('s'):
+            #     cv2.imwrite(f'{PARENT_DIR}/test/test.jpg', img)
+            #     np.save(f'{PARENT_DIR}/test/test.npy', depth_img)
 
             self.rate.sleep()
 

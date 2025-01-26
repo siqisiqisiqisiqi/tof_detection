@@ -9,7 +9,8 @@ def set_camera_exposure(exposure_value):
     rospy.wait_for_service('/camera/set_color_exposure')
     try:
         # Create a service proxy
-        set_exposure = rospy.ServiceProxy('/camera/set_color_exposure', SetInt32)
+        set_exposure = rospy.ServiceProxy(
+            '/camera/set_color_exposure', SetInt32)
         # Call the service with the desired exposure value
         response = set_exposure(exposure_value)
         print(f"Service call successful: {response}")
@@ -36,7 +37,7 @@ if __name__ == "__main__":
     rospy.init_node('camera_setting')
     # Desired exposure value
     auto_exposure = False
-    exposure_value = 80
+    exposure_value = 90
     # Call the function
     set_auto_exposure(auto_exposure)
     set_camera_exposure(exposure_value)

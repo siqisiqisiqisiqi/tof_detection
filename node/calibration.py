@@ -25,7 +25,8 @@ class Calibration:
         self.tvecs = None
         self.mtx = None
         self.dist = None
-        self.chess_size = 22.8 * 1e-3  # unit: m
+        # self.chess_size = 22.8 * 1e-3  # unit: m
+        self.chess_size = 22.8  # unit: mm
 
         # Init subscribers
         rospy.Subscriber("camera/color/image_raw", Image, self.get_image)
@@ -43,6 +44,7 @@ class Calibration:
             "camera/color/camera_info", CameraInfo)
         self.mtx = np.array(camera_info.K).reshape(3, 3)
         self.dist = np.array(camera_info.D)[:5]
+        # self.dist = np.array([[0, 0, 0, 0, 0]]).astype("float64")
         rospy.loginfo(f"distortion value is {self.dist}.")
 
     def save_data(self, img):
