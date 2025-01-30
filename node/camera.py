@@ -13,8 +13,8 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from ultralytics import YOLO
 
-from src.point_util import yolo2point, depth_acquisit, img2world
-from src.visual import kpts_visiual
+from src.point_util import yolo2point, depth_acquisit, img2world, priority_evaluate
+from src.visual import kpts_visiual, optimal_kpts_visual
 
 
 class Camera:
@@ -28,6 +28,7 @@ class Camera:
         self.cv_depth = None
         self.image_t = None
         self.depth_t = None
+        self.save_index = 0
 
         # YOLO init
         self.model = YOLO(f"{PARENT_DIR}/weights/bunched_rgb_kpts.pt")
@@ -64,26 +65,48 @@ class Camera:
             depth_img = np.array(self.cv_depth, dtype=np.float32)
             results = self.model(img)
 
-            if results[0].keypoints is None:
+            if results[0].keypoints.conf is None:
                 continue
+            
+            try:
+                points, _, num_object = yolo2point(results)
+                if num_object == 0:
+                    continue 
+                depths, _ = depth_acquisit(points, depth_img)
+                pro_points, angles, pro_result = img2world(points, depths)
 
-            points, _ = yolo2point(results)
-            depths, _ = depth_acquisit(points, depth_img)
-            pro_points, yaws = img2world(points, depths)
+                # priority calculation
+                yaws = angles * np.pi / 180
+                ave_depth = np.mean(depths.reshape(-1,3),axis=1)
+                optimal_obj, optimal_index = priority_evaluate(ave_depth, pro_points, yaws, pro_result)
 
-            # visualization
-            k = kpts_visiual(img, points, pro_points)
-            if k == ord('q'):
+                # optimal visualization
+                grasp_point = points[optimal_index,1,:2].astype(int)
+                k = optimal_kpts_visual(img, grasp_point, optimal_obj)
+                if k == ord('q'):
+                    break
+                if k == ord('s'):
+                    cv2.imwrite(f'{PARENT_DIR}/test/test{self.save_index}.jpg', self.cv_image)
+                    np.save(f'{PARENT_DIR}/test/test{self.save_index}.npy', depth_img)
+                    self.save_index = self.save_index + 1
+
+                # # visualization all the projected results
+                # k = kpts_visiual(img, points, pro_points)
+                # if k == ord('q'):
+                #     break
+
+                # visualize the yolo keypoint result
+                # for r in results:
+                #     im_array = r.plot()
+                #     cv2.imshow("image", im_array)
+                #     k = cv2.waitKey(5)
+
+            except Exception as e:
+                rospy.loginfo(e)
+                cv2.imwrite(f'{PARENT_DIR}/test/test{self.save_index}.jpg', img)
+                np.save(f'{PARENT_DIR}/test/test{self.save_index}.npy', depth_img)
+                self.save_index = self.save_index + 1
                 break
-
-            # # visualize the keypoint result
-            # for r in results:
-            #     im_array = r.plot()
-            #     cv2.imshow("image", im_array)
-            #     k = cv2.waitKey(5)
-            # if k == ord('s'):
-            #     cv2.imwrite(f'{PARENT_DIR}/test/test.jpg', img)
-            #     np.save(f'{PARENT_DIR}/test/test.npy', depth_img)
 
             self.rate.sleep()
 

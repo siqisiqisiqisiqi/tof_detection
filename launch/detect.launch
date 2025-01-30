@@ -1,8 +1,8 @@
 <launch>
 
     <include file="$(find orbbec_camera)/launch/femto_mega.launch"/>
-    <!-- <node name="camera_setting" pkg="tof_detection" type="setting.py" output="screen">
-    </node> -->
+    <node name="camera_setting" pkg="tof_detection" type="setting.py" output="screen">
+    </node>
     <node name="camera" pkg="tof_detection" type="camera.py" output="screen">
     </node>
 

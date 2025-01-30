@@ -4,7 +4,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(BASE_DIR)
 
 import numpy as np
+from scipy.stats import zscore
 from numpy.linalg import inv
+from sklearn.neighbors import NearestNeighbors
 
 chess_size = 1  # mm
 extrinsic_param = os.path.join(PARENT_DIR, 'params/E.npz')
@@ -46,7 +48,7 @@ def yolo2point(yolo_pose_results):
     one_vector = np.ones(points.shape[:2])
     one_vector = np.expand_dims(one_vector, axis=2)
     points = np.concatenate((points, one_vector), axis=2)
-    return points, visual
+    return points, visual, num_object
 
 
 def depth_acquisit(points, depth_img, depth_acquisit_scale=[1, 2, 3]):
@@ -166,4 +168,85 @@ def img2world(point, depth):
     dx = p2[:, 0] - p1[:, 0]
     orientation = np.arctan2(dy, dx) * 180 / np.pi
     grasp_point[:, -1] = depth[1::3]
-    return grasp_point, orientation
+    return grasp_point, orientation, result
+
+
+def angular_distance(a, b):
+    """ Compute the absolute difference between two angles in [0, pi) """
+    return min(np.abs(a - b), np.pi - np.abs(a - b))
+
+
+def normalize_angle(angle):
+    """ Normalize angles into the range [0, pi) """
+    return np.mod(angle, np.pi)
+
+
+def angle_distance(angles):
+    # Normalize angles to [0, pi)
+    normalized_angles = np.array([normalize_angle(a) for a in angles])
+
+    # Compute pairwise angular distances
+    distances = np.zeros(len(normalized_angles))
+    for i in range(len(normalized_angles)):
+        distances[i] = np.mean(
+            [angular_distance(normalized_angles[i], a) for a in normalized_angles])
+    return distances
+
+
+def min_max_normalize(data):
+    """ Normalize data using Min-Max Scaling to range [0, 1] """
+    X_min = np.min(data)
+    X_max = np.max(data)
+    return (data - X_min) / (X_max - X_min)
+
+
+def center_distance(pro_point):
+    centers = pro_point[:, :2]
+    k = min(3, centers.shape[0])
+    nbrs = NearestNeighbors(n_neighbors=k).fit(centers)
+    distances, _ = nbrs.kneighbors(centers)
+    distances = np.mean(distances[:, 1:], axis=1)
+    return distances
+
+
+def offset_correction(data):
+    return data - np.mean(data)
+
+
+def priority_evaluate(ave_height, pro_point, yaw, result):
+    """_summary_
+
+    Parameters
+    ----------
+    ave_height : _type_ [num_object]
+        _description_
+    pro_point : _type_ [num_object, 3]
+        _description_
+    yaw : orientation value in randian [-pi, pi] 
+        _description_
+    result : all the keypoints in world coordinate frame [num_obj, num_keypoints, 3]
+        _description_    
+    """
+    if len(yaw) == 1:
+        index = 0
+        return pro_point.squeeze(), index
+
+    gain = {'height_gain': 2.0, 'density_gain': 1.0, 'yaw_gain': 1.0}
+    height_value = gain['height_gain'] * \
+        offset_correction(-1 * ave_height) / 20
+
+    yaw_dist = angle_distance(yaw)
+    yaw_value = gain['yaw_gain'] * yaw_dist / (np.pi / 2)
+
+    p1 = result[:, 0, :2]
+    p2 = result[:, 2, :2]
+    center = (p1 + p2) / 2
+    center_dist = center_distance(center)
+    center_value = gain['yaw_gain'] * center_dist / 50
+
+    cost_function = height_value + yaw_value + center_value
+
+    sorted_indices = np.argsort(cost_function)[::-1]
+    index = sorted_indices[0]
+
+    return pro_point[index], index
