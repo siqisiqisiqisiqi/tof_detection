@@ -25,7 +25,6 @@ class Calibration:
         self.tvecs = None
         self.mtx = None
         self.dist = None
-        # self.chess_size = 22.8 * 1e-3  # unit: m
         self.chess_size = 22.8  # unit: mm
 
         # Init subscribers

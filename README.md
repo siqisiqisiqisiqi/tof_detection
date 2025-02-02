@@ -16,6 +16,5 @@
 
 ## Green onion picking priority calculation
 1. Height (Higher is better)
-2. Position (Center is better)
-3. Distance (Isolate is better)
-4. Orientation (Large yaw is better)
+2. Density (less density is better)
+3. Distance (Isolate is better) 

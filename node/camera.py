@@ -14,7 +14,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from ultralytics import YOLO
 
 from src.point_util import yolo2point, depth_acquisit, img2world, priority_evaluate
-from src.visual import kpts_visiual, optimal_kpts_visual
+from src.visual import kpts_visiual, optimal_kpts_visual, img_visual
 
 
 class Camera:
@@ -66,11 +66,13 @@ class Camera:
             results = self.model(img)
 
             if results[0].keypoints.conf is None:
+                img_visual(img)
                 continue
             
             try:
                 points, _, num_object = yolo2point(results)
                 if num_object == 0:
+                    img_visual(img)
                     continue 
                 depths, _ = depth_acquisit(points, depth_img)
                 pro_points, angles, pro_result = img2world(points, depths)
@@ -83,6 +85,7 @@ class Camera:
                 # optimal visualization
                 grasp_point = points[optimal_index,1,:2].astype(int)
                 k = optimal_kpts_visual(img, grasp_point, optimal_obj)
+                
                 if k == ord('q'):
                     break
                 if k == ord('s'):
