@@ -27,7 +27,7 @@ def kpts_visiual(img, points, pro_points):
     return k
 
 
-def optimal_kpts_visual(img, grasp_point, optimal_item):
+def optimal_kpts_visual(img, grasp_point, optimal_item, yaw):
     """optimal keypoint visualization
 
     Parameters
@@ -41,7 +41,8 @@ def optimal_kpts_visual(img, grasp_point, optimal_item):
     -------
         visual input
     """
-    text = f"({optimal_item[0]},{optimal_item[1]},{optimal_item[2]})"
+    angle = yaw * 180 / np.pi
+    text = f"({optimal_item[0]:.2f},{optimal_item[1]:.2f},{optimal_item[2]:.2f}, {angle:.2f})"
     cv2.circle(img, grasp_point, radius=5, color=(0, 255, 0), thickness=-1)
     cv2.putText(img, text, (grasp_point[0] + 10, grasp_point[1] - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 255, 255), thickness=1)

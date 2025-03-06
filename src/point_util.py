@@ -21,6 +21,11 @@ cx = mtx[0, 2]
 cy = mtx[1, 2]
 
 
+def point_offset(points):
+    points[:, :, 1] = points[:, :, 1] - 5
+    return points
+
+
 def yolo2point(yolo_pose_results):
     """Extract the yolo pose estimation information
 
@@ -36,7 +41,8 @@ def yolo2point(yolo_pose_results):
     visual: ndarray
         the second and third keypoints visualbility
     """
-    confidence_thresdhold = 0.8
+    index = {0: 1, 1: 2, 2: 1}
+    confidence_thresdhold = 0.5
     confidence = yolo_pose_results[0].keypoints.conf.detach().cpu().numpy()
     conf_mean = np.mean(confidence, axis=-1)
     indices = np.where(conf_mean > confidence_thresdhold)
@@ -44,6 +50,12 @@ def yolo2point(yolo_pose_results):
     num_object = len(indices[0])
     points = keypoints[indices[0], :, :2]
     visual = keypoints[indices[0], :, 2]
+
+    mask = visual < 0.5
+    indices = np.argwhere(mask)
+    for indice in indices:
+        i, j = indice
+        points[i, j] = points[i, index[j]]
 
     one_vector = np.ones(points.shape[:2])
     one_vector = np.expand_dims(one_vector, axis=2)
@@ -156,10 +168,10 @@ def img2world(point, depth):
         green onion orientation in the world coordinate frame
     """
     point = point.reshape((-1, 3))
-    # depth = depth / 1000
     depth = np.round(depth, 2)
     result = projection(point, mtx, Mat, tvec, depth)
     result = np.round(result, 2)
+    result[:, -1] = depth
     result = result.reshape((-1, 3, 3))
     grasp_point = result[:, 1, :]
     p1 = result[:, 0, :]
@@ -167,7 +179,7 @@ def img2world(point, depth):
     dy = p2[:, 1] - p1[:, 1]
     dx = p2[:, 0] - p1[:, 0]
     orientation = np.arctan2(dy, dx) * 180 / np.pi
-    grasp_point[:, -1] = depth[1::3]
+    # grasp_point[:, -1] = depth[1::3]
     return grasp_point, orientation, result
 
 
@@ -213,6 +225,14 @@ def offset_correction(data):
     return data - np.mean(data)
 
 
+def object_filter(point):
+    """remove the green onion on the other side of the system
+    """
+    x = point[:, 0]
+    index = x > -30
+    return index
+
+
 def priority_evaluate(ave_height, pro_point, yaw, result):
     """_summary_
 
@@ -227,11 +247,12 @@ def priority_evaluate(ave_height, pro_point, yaw, result):
     result : all the keypoints in world coordinate frame [num_obj, num_keypoints, 3]
         _description_    
     """
+
     if len(yaw) == 1:
         index = 0
-        return pro_point.squeeze(), index
+        return pro_point.squeeze(), yaw[0], index
 
-    gain = {'height_gain': 2.0, 'density_gain': 1.0, 'yaw_gain': 1.0}
+    gain = {'height_gain': 2, 'density_gain': 1.0, 'yaw_gain': 1.0}
     height_value = gain['height_gain'] * \
         offset_correction(-1 * ave_height) / 20
 
@@ -249,4 +270,15 @@ def priority_evaluate(ave_height, pro_point, yaw, result):
     sorted_indices = np.argsort(cost_function)[::-1]
     index = sorted_indices[0]
 
-    return pro_point[index], index
+    return pro_point[index], yaw[index], index
+
+
+def point_trans(optimal_obj, yaw):
+    """convert from keypoint 2 to the middle of the green onion
+    """
+    # gripper_len = -100  # mm
+    gripper_len = 0
+    optimal_item_center = optimal_obj[:3]
+    optimal_item_center[0] += gripper_len / 2 * np.cos(yaw)
+    optimal_item_center[1] += gripper_len / 2 * np.sin(yaw)
+    return [*optimal_item_center, yaw]

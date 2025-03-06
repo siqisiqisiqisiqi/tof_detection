@@ -51,15 +51,17 @@ if __name__ == "__main__":
     rospy.init_node('camera_setting')
 
     # Desired exposure value with light on
-    # auto_exposure = False
+    auto_exposure = True
     # exposure_value = 90
-    # set_auto_exposure(auto_exposure)
+    # gain_value = 50
+    set_auto_exposure(auto_exposure)
     # set_camera_exposure(exposure_value)
+    # set_camera_gain(gain_value)
 
     # Desired exposure value with light scenario 7
-    auto_exposure = False
-    exposure_value = 250
-    gain_value = 65
-    set_auto_exposure(auto_exposure)
-    set_camera_exposure(exposure_value)
-    set_camera_gain(gain_value)
+    # auto_exposure = False
+    # exposure_value = 250
+    # gain_value = 65
+    # set_auto_exposure(auto_exposure)
+    # set_camera_exposure(exposure_value)
+    # set_camera_gain(gain_value)

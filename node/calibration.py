@@ -14,6 +14,7 @@ from sensor_msgs.msg import Image, CameraInfo
 
 from src.calib_util import coordinates_draw
 
+
 class Calibration:
     def __init__(self):
         rospy.init_node("calibration", anonymous=True)
@@ -55,7 +56,7 @@ class Calibration:
         tvec = self.tvecs * self.chess_size
         np.savez(f'{PARENT_DIR}/params/E.npz', mtx=self.mtx,
                     dist=self.dist, Matrix=Mat, tvec=tvec)
-        
+
         rospy.loginfo("Successfully save the calibration parameters.")
 
     def extrinsic_calibration(self):
