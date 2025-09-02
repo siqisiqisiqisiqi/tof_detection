@@ -229,7 +229,7 @@ def object_filter(point):
     """remove the green onion on the other side of the system
     """
     x = point[:, 0]
-    index = x > -30
+    index = x > -50
     return index
 
 
@@ -252,7 +252,7 @@ def priority_evaluate(ave_height, pro_point, yaw, result):
         index = 0
         return pro_point.squeeze(), yaw[0], index
 
-    gain = {'height_gain': 2, 'density_gain': 1.0, 'yaw_gain': 1.0}
+    gain = {'height_gain': 5, 'density_gain': 1.0, 'yaw_gain': 1.0}
     height_value = gain['height_gain'] * \
         offset_correction(-1 * ave_height) / 20
 

@@ -118,7 +118,7 @@ class Camera:
                         f'{PARENT_DIR}/test/test{self.save_index}.npy', depth_img)
                     self.save_index = self.save_index + 1
 
-                # # visualization all the projected results
+                # visualization all the projected results
                 # k = kpts_visiual(img, points, pro_points)
                 # if k == ord('q'):
                 #     break
